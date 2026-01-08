@@ -1,5 +1,6 @@
 ﻿using DataAccess.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Models.Modelos;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -14,12 +15,6 @@ namespace API.Controllers
         {
             _comunaRepository = comunaRepository;
         }
-        // GET: api/<ComunaController>
-        [HttpGet]
-        public IEnumerable<string> Get()
-        {
-            return new string[] { "value1", "value2" };
-        }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
@@ -27,6 +22,14 @@ namespace API.Controllers
             var comuna = await _comunaRepository.GetByIdAsync(id);
             if (comuna == null) return NotFound();
             return Ok(comuna);
+        }
+
+        [HttpPost()]
+        public async Task<IActionResult> Update(Comuna comuna)
+        {
+            var result = await _comunaRepository.UpdateAsync(comuna);
+            if (!result) return NotFound();
+            return Ok();
         }
     }
 }

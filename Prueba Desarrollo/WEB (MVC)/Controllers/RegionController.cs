@@ -123,7 +123,7 @@ namespace WEB__MVC_.Controllers
 
                 _logger.LogWarning("Error al obtener comunas de región {RegionId}: {StatusCode}",
                     id, comunasResponse.StatusCode);
-
+                TempData["Error"] = "Error al cargar las comunas de la región.";
                 ViewBag.RegionId = id;
                 return Json(new List<Comuna>());
             }

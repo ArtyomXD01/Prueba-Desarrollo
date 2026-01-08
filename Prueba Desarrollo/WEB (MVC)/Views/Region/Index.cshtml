@@ -22,8 +22,11 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
+    <div id="mensajeAlerta" class="alert alert-success d-none" role="alert">
+        <i class="bi bi-check-circle-fill"></i> <span id="textoAlerta"></span>
+    </div>
     <div class="col">
-        <button class="btn-primary"><i class="bi bi-arrow-clockwise" onclick="cargarRegiones()" ></i></button>
+        <button class="btn btn-primary" onclick="cargarRegiones()"><i class="bi bi-arrow-clockwise"></i> Refrescar</button>
     </div>
     <div class="row">
 
@@ -39,6 +42,12 @@
                             <!-- Las regiones se cargarán aquí -->
 
                         </div>
+                    </div>
+                    <div class="card-footer">
+                        <a asp-action="Details" asp-route-id="0" class="btn btn-outline-primary btn-sm" onclick="cargarDetallesRegion(0)"
+                           data-bs-toggle="modal" data-bs-target="#modalDetallesRegion">
+                            <i class="bi bi-info-circle"></i> Agregar Región
+                        </a>
                     </div>
                 </div>
             </div>
@@ -68,51 +77,6 @@
                 </div>
             </div>
         </div>
-
-        @if (Model != null && Model.Any())
-        {
-            @foreach (var region in Model)
-            {
-                <div class="col-md-6 col-lg-4 mb-4">
-                    <div class="card h-100 shadow-sm hover-card">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <h5 class="card-title mb-0">@region.NombreRegion</h5>
-                            </div>
-                            <p class="card-text text-muted">
-                                <small><i class="bi bi-hash"></i> ID: @region.IdRegion</small>
-                            </p>
-                        </div>
-                        <div class="card-footer bg-white border-top-0">
-                            <div class="d-grid gap-2">
-                                <a asp-action="Details" asp-route-id="@region.IdRegion" class="btn btn-outline-primary btn-sm" onclick="cargarDetallesRegion(@region.IdRegion)" data-bs-toggle="modal" data-bs-target="#modalDetallesRegion">
-                                    <i class="bi bi-info-circle"></i> Ver Detalles
-                                </a>
-                                <a asp-action="Comunas" asp-route-id="@region.IdRegion" class="btn btn-primary btn-sm" onclick="cargarComunas(@region.IdRegion,@region.NombreRegion)" data-bs-toggle="modal" data-bs-target="#modalComunas">
-                                    <i class="bi bi-building"></i>Ver Comunas
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
-        }
-        else
-        {
-            <div class="col-12">
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i> No hay regiones disponibles.
-
-                </div>
-                <div class="col">
-                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalDetallesRegion" onclick="cargarDetallesRegion(0)">
-                        <i class="bi bi-info-circle">
-                        </i>
-                        Agregar region
-                    </button>
-                </div>
-            </div>
-        }
     </div>
 
     <!-- Modal: Detalles de Región -->
@@ -133,38 +97,12 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" id="btnGuardarRegion" name="btnGuardarRegion" class="btn btn-secondary" >Guardar</button>
+                    <button type="button" id="btnGuardarRegion" name="btnGuardarRegion" class="btn btn-warning"><i class="bi bi-save"></i>Guardar</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
     </div>
-    <!-- Modal: Lista de Comunas -->
-@*     <div class="modal fade" id="modalComunas" tabindex="-1" aria-labelledby="modalComunasLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header bg-info text-white">
-                    <h5 class="modal-title" id="modalComunasLabel">
-                        <i class="bi bi-building"></i> <span id="tituloComunas">Comunas</span>
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="contenidoComunas">
-                    <div class="text-center py-4">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Cargando...</span>
-                        </div>
-                        <p class="mt-2 text-muted">Cargando comunas...</p>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle"></i> Cerrar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div> *@
 
     <!-- Modal: Editar Comuna -->
     <div class="modal fade" id="modalEditarComuna" tabindex="-1" aria-labelledby="modalEditarComunaLabel" aria-hidden="true">
@@ -212,7 +150,7 @@
                                 <i class="bi bi-file-code"></i> Información Adicional (XML)
                             </label>
                             <textarea class="form-control font-monospace" id="editInformacion" rows="10"
-                                      placeholder="<datos>&#10;  <poblacion>500000</poblacion>&#10;  <superficie>641.4</superficie>&#10;  <codigoPostal>8320000</codigoPostal>&#10;</datos>"></textarea>
+                                      placeholder="<info>&#10;  <poblacion>500000</poblacion>&#10;  <superficie>641.4</superficie>&#10;  <densidad>8320000</densidad>&#10;</info>"></textarea>
                             <small class="form-text text-muted">
                                 <i class="bi bi-info-circle"></i> Formato XML opcional para información adicional
                             </small>
@@ -228,7 +166,7 @@
                         <i class="bi bi-x-circle"></i> Cancelar
                     </button>
                     <button type="button" class="btn btn-warning" id="btnGuardarComuna">
-                        <i class="bi bi-save"></i> Guardar Cambios
+                        <i class="bi bi-save"></i> Guardar 
                     </button>
                 </div>
             </div>
@@ -242,23 +180,23 @@
             transition: background-color 0.2s;
         }
 
-            .region-item:hover {
-                background-color: #e9ecef;
-            }
+        .region-item:hover {
+            background-color: #e9ecef;
+        }
 
-            .region-item.active {
-                background-color: #0d6efd;
-                color: white;
-            }
+        .region-item.active {
+            background-color: #0d6efd;
+            color: white;
+        }
 
-                .region-item.active td {
-                    color: white;
-                }
+        .region-item.active td {
+            color: white;
+        }
 
-                .region-item.active .badge {
-                    background-color: white !important;
-                    color: #0d6efd !important;
-                }
+        .region-item.active .badge {
+            background-color: white !important;
+            color: #0d6efd !important;
+        }
 
         .font-monospace {
             font-family: 'Courier New', monospace;
@@ -272,6 +210,222 @@
                 transform: translateY(-5px);
                 box-shadow: 0 8px 16px rgba(0,0,0,0.15) !important;
             }
+
+        :root {
+            --primary-color: #0d6efd;
+            --secondary-color: #6c757d;
+            --success-color: #198754;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+        }
+
+        body {
+            background: linear-gradient(135deg, white 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .main-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+            .page-header h1 {
+                color: #667eea;
+                font-weight: 700;
+                margin-bottom: 10px;
+            }
+
+            .page-header p {
+                color: #6c757d;
+                font-size: 1.1rem;
+            }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            height: 100%;
+        }
+
+            .card:hover {
+                transform: translateY(-5px);
+            }
+
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+            padding: 15px 20px;
+            font-weight: 600;
+        }
+
+        .list-group-item {
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            padding: 15px 20px;
+        }
+
+            .list-group-item:hover {
+                background-color: #f8f9fa;
+                transform: translateX(5px);
+            }
+
+            .list-group-item.active {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border-color: #667eea;
+                color: white;
+                font-weight: 600;
+            }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+            .table thead {
+                background-color: #f8f9fa;
+            }
+
+                .table thead th {
+                    border-bottom: 2px solid #667eea;
+                    color: #667eea;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    font-size: 0.85rem;
+                    padding: 15px;
+                }
+
+            .table tbody tr {
+                transition: background-color 0.2s ease;
+            }
+
+                .table tbody tr:hover {
+                    background-color: #f8f9fa;
+                }
+
+        .btn-editar-comuna {
+            transition: all 0.3s ease;
+        }
+
+            .btn-editar-comuna:hover {
+                transform: scale(1.05);
+            }
+
+        .modal-content {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+            padding: 20px 25px;
+        }
+
+            .modal-header .btn-close {
+                filter: brightness(0) invert(1);
+            }
+
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            border-width: 0.3rem;
+        }
+
+        .alert {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            animation: slideDown 0.3s ease;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+            .empty-state i {
+                font-size: 4rem;
+                color: #dee2e6;
+                margin-bottom: 20px;
+            }
+
+        .badge-id {
+            background-color: #667eea;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+
+        .loading-overlay {
+            position: relative;
+        }
+
+        .loading-overlay::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+        }
+
+        .scroll-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .scroll-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scroll-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .scroll-container::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
     </style>
 }
 @section Scripts {
@@ -413,7 +567,7 @@
                             <div class="alert alert-info">
                                 <i class="bi bi-info-circle"></i> No hay comunas registradas en esta región
                                 <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditarComuna"
-                                onclick="abrirEdicionComuna(0)">
+                                onclick="abrirEdicionComuna(0,${regionId})">
                                     <i class="bi bi-info-circle"></i> Agregar Comuna
                                 </button>
                             </div>
@@ -437,7 +591,7 @@
                                 <td><strong>${comuna.nombreComuna}</strong></td>
                                 <td class="text-end table-actions">
                                     <button class="btn btn-sm btn-warning"
-                                            onclick="abrirEdicionComuna(${comuna.idComuna})"
+                                            onclick="abrirEdicionComuna(${comuna.idComuna},${regionId})"
                                             title="Editar comuna">
                                         <i class="bi bi-pencil-fill"></i> Editar
                                     </button>
@@ -447,7 +601,13 @@
                     });
 
                     html += '</tbody></table></div>';
-                    html += `<div class="mt-3"><small class="text-muted"><i class="bi bi-info-circle"></i> Total: <strong>${comunas.length}</strong> comunas</small></div>`;
+                    html += `<div class="mt-3"><small class="text-muted"><i class="bi bi-info-circle"></i> Total: <strong>${comunas.length}</strong> comunas</small>
+                     <button type="button" class="btn btn-outline-primary btn-sm" 
+                                onclick="abrirEdicionComuna(0,${regionId})">
+                                    <i class="bi bi-info-circle"></i> Agregar Comuna
+                                </button>
+                    </div>
+                   `;
                     $('#contenidoComunas').html(html);
                 })
                 .catch(error => {
@@ -461,15 +621,29 @@
         }
 
         // ==================== ABRIR EDICIÓN DE COMUNA ====================
-        function abrirEdicionComuna(comunaId) {
+        function abrirEdicionComuna(comunaId,idRegion) {
             console.log('Editando comuna:', comunaId);
-
+const xmlTemplate = `
+<Info>
+<Superficie>0.0</Superficie>
+<Poblacion>0</Poblacion>
+<Densidad>0.0</Densidad>
+</Info>`;
             // Mostrar el modal de edición
             const modalEditar = new bootstrap.Modal(document.getElementById('modalEditarComuna'));
             modalEditar.show();
-
+            //Revisa si el id de comuna es 0 (para agregar nuevas)
+            if(comunaId== 0){
+                    $('#editIdComuna').val(0);
+                    $('#editIdRegion').val(idRegion);
+                    $('#displayIdComuna').val(0);
+                    $('#displayIdRegion').val(idRegion);
+                    $('#editNombreComuna').val('');
+                    $('#editInformacion').val(xmlTemplate);
+                    console.log('Guardando comuna:',$('#editIdRegion').val(idRegion),$('#displayIdRegion').val(idRegion) );
+            }else{
             // Cargar los datos
-            fetch('@Url.Action("GetComunaDetails", "Comunas")/' + comunaId)
+            fetch('@Url.Action("Details", "Comuna")/' + comunaId)
                 .then(response => {
                     if (!response.ok) throw new Error('Error en la respuesta');
                     return response.json();
@@ -481,12 +655,14 @@
                     $('#displayIdRegion').val(comuna.idRegion);
                     $('#editNombreComuna').val(comuna.nombreComuna);
                     $('#editInformacion').val(comuna.informacion || '');
+                            modalEditar.hide();
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     mostrarAlerta('Error al cargar los datos de la comuna', 'danger');
                     modalEditar.hide();
                 });
+           }
         }
 
         // ==================== GUARDAR COMUNA ====================
@@ -509,14 +685,13 @@
                 };
 
                 console.log('Guardando comuna:', comunaData);
-
                 // Deshabilitar botón mientras se guarda
                 const btnGuardar = this;
-                const textoOriginal = btnGuardar.innerHTML;
+                const textoOriginal = '<i class="bi bi-save"></i> Guardar ';
                 btnGuardar.disabled = true;
                 btnGuardar.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
 
-                fetch('@Url.Action("UpdateComuna", "Comunas")', {
+                fetch('@Url.Action("UpdSert", "Comuna")', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -536,12 +711,7 @@
 
                     // Mostrar mensaje de éxito
                     mostrarAlerta('Comuna actualizada correctamente', 'success');
-
-                    // Recargar comunas
-                    if (regionIdActual) {
-                        const regionNombre = document.getElementById('tituloComunas').textContent.replace('Comunas de ', '');
-                        cargarComunas(regionIdActual, regionNombre);
-                    }
+                    cargarRegiones();
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -642,28 +812,48 @@
         });
 
         // ==================== MOSTRAR ALERTAS ====================
+        // function mostrarAlerta(mensaje, tipo) {
+        //     const alertHTML = `
+        //         <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+        //             <i class="bi bi-${tipo === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill'}"></i>
+        //             ${mensaje}
+        //             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        //         </div>
+        //     `;
+
+        //     document.getElementById('alertContainer').innerHTML = alertHTML;
+
+        //     // Auto-cerrar después de 4 segundos
+        //     setTimeout(() => {
+        //         const alert = document.querySelector('#alertContainer .alert');
+        //         if (alert) {
+        //             const bsAlert = new bootstrap.Alert(alert);
+        //             bsAlert.close();
+        //         }
+        //     }, 4000);
+
+        //     // Scroll al top
+        //     window.scrollTo({ top: 0, behavior: 'smooth' });
+        // }
         function mostrarAlerta(mensaje, tipo) {
-            const alertHTML = `
-                <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
-                    <i class="bi bi-${tipo === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill'}"></i>
-                    ${mensaje}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
+            const alerta = $('#mensajeAlerta');
+            const iconos = {
+                'success': 'bi-check-circle-fill',
+                'danger': 'bi-x-circle-fill',
+                'warning': 'bi-exclamation-triangle-fill',
+                'info': 'bi-info-circle-fill'
+            };
 
-            document.getElementById('alertContainer').innerHTML = alertHTML;
+            alerta.removeClass('d-none alert-success alert-danger alert-warning alert-info');
+            alerta.addClass(`alert-${tipo}`);
+            alerta.html(`<i class="bi ${iconos[tipo]}"></i> <span>${mensaje}</span>`);
 
-            // Auto-cerrar después de 4 segundos
-            setTimeout(() => {
-                const alert = document.querySelector('#alertContainer .alert');
-                if (alert) {
-                    const bsAlert = new bootstrap.Alert(alert);
-                    bsAlert.close();
-                }
+            // Scroll al top para ver la alerta
+            $('html, body').animate({ scrollTop: 0 }, 300);
+
+            setTimeout(function() {
+                alerta.addClass('d-none');
             }, 4000);
-
-            // Scroll al top
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     </script>
 }

@@ -54,7 +54,7 @@ namespace DataAccess.Repos
         {
             using (SqlConnection conn = new SqlConnection(_connectionString))
             {
-                using (SqlCommand cmd = new SqlCommand("sp_UpdateComuna", conn))
+                using (SqlCommand cmd = new SqlCommand("Comuna_merge", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
 
@@ -75,9 +75,18 @@ namespace DataAccess.Repos
                     cmd.Parameters.Add(xmlParam);
 
                     await conn.OpenAsync();
-                    int rowsAffected = await cmd.ExecuteNonQueryAsync();
+                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
 
-                    return rowsAffected > 0;
+                            comuna.IdComuna = reader.GetInt32(0);  // Columna "Id"
+                            int success = reader.GetInt32(1);  // Columna "Success"
+
+                            return success == 1;
+                        }
+                    }
+                    return false;
                 }
             }
         }
