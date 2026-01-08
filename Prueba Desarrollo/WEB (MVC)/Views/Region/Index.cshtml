@@ -1,0 +1,669 @@
+﻿@model List<Models.Modelos.Region>
+@{
+    ViewData["Title"] = "Regiones de Chile";
+}
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4">
+                <i class="bi bi-geo-alt-fill text-primary"></i> Regiones de Chile
+            </h1>
+            <p class="lead text-muted">Seleccione una región para ver más detalles y sus comunas</p>
+        </div>
+    </div>
+
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill"></i>
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    <div class="col">
+        <button class="btn-primary"><i class="bi bi-arrow-clockwise" onclick="cargarRegiones()" ></i></button>
+    </div>
+    <div class="row">
+
+        <div class="row g-4">
+            <!-- Panel Izquierdo: Lista de Regiones -->
+            <div class="col-lg-4 col-md-5">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-map"></i> Regiones de Chile
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush scroll-container" id="listaRegiones">
+                            <!-- Las regiones se cargarán aquí -->
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel Derecho: Lista de Comunas -->
+            <div class="col-lg-8 col-md-7">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-building"></i> <span id="tituloComuna">Comunas</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="loadingComunas" class="text-center d-none py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <p class="mt-3 text-muted">Cargando comunas...</p>
+                        </div>
+
+                        <div id="contenidoComunas">
+                            <div class="empty-state">
+                                <i class="bi bi-arrow-left-circle"></i>
+                                <h5>Seleccione una región</h5>
+                                <p class="text-muted">Para ver la lista de comunas correspondientes</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (Model != null && Model.Any())
+        {
+            @foreach (var region in Model)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 shadow-sm hover-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title mb-0">@region.NombreRegion</h5>
+                            </div>
+                            <p class="card-text text-muted">
+                                <small><i class="bi bi-hash"></i> ID: @region.IdRegion</small>
+                            </p>
+                        </div>
+                        <div class="card-footer bg-white border-top-0">
+                            <div class="d-grid gap-2">
+                                <a asp-action="Details" asp-route-id="@region.IdRegion" class="btn btn-outline-primary btn-sm" onclick="cargarDetallesRegion(@region.IdRegion)" data-bs-toggle="modal" data-bs-target="#modalDetallesRegion">
+                                    <i class="bi bi-info-circle"></i> Ver Detalles
+                                </a>
+                                <a asp-action="Comunas" asp-route-id="@region.IdRegion" class="btn btn-primary btn-sm" onclick="cargarComunas(@region.IdRegion,@region.NombreRegion)" data-bs-toggle="modal" data-bs-target="#modalComunas">
+                                    <i class="bi bi-building"></i>Ver Comunas
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> No hay regiones disponibles.
+
+                </div>
+                <div class="col">
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalDetallesRegion" onclick="cargarDetallesRegion(0)">
+                        <i class="bi bi-info-circle">
+                        </i>
+                        Agregar region
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Modal: Detalles de Región -->
+    <div class="modal fade" id="modalDetallesRegion" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-geo-alt-fill"></i> Detalles de la Región
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="contenidoDetallesRegion">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="btnGuardarRegion" name="btnGuardarRegion" class="btn btn-secondary" >Guardar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal: Lista de Comunas -->
+@*     <div class="modal fade" id="modalComunas" tabindex="-1" aria-labelledby="modalComunasLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="modalComunasLabel">
+                        <i class="bi bi-building"></i> <span id="tituloComunas">Comunas</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="contenidoComunas">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Cargando comunas...</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div> *@
+
+    <!-- Modal: Editar Comuna -->
+    <div class="modal fade" id="modalEditarComuna" tabindex="-1" aria-labelledby="modalEditarComunaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="modalEditarComunaLabel">
+                        <i class="bi bi-pencil-square"></i> Editar Comuna
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEditarComuna">
+                        <input type="hidden" id="editIdComuna" />
+                        <input type="hidden" id="editIdRegion" />
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-muted">
+                                    <i class="bi bi-hash"></i> ID Comuna
+                                </label>
+                                <input type="text" class="form-control-plaintext" id="displayIdComuna" readonly />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-muted">
+                                    <i class="bi bi-map"></i> ID Región
+                                </label>
+                                <input type="text" class="form-control-plaintext" id="displayIdRegion" readonly />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editNombreComuna" class="form-label fw-bold">
+                                <i class="bi bi-building"></i> Nombre de la Comuna <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control form-control-lg" id="editNombreComuna" required
+                                   placeholder="Ingrese el nombre de la comuna" maxlength="128" />
+                            <div class="invalid-feedback">
+                                El nombre de la comuna es requerido.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editInformacion" class="form-label fw-bold">
+                                <i class="bi bi-file-code"></i> Información Adicional (XML)
+                            </label>
+                            <textarea class="form-control font-monospace" id="editInformacion" rows="10"
+                                      placeholder="<datos>&#10;  <poblacion>500000</poblacion>&#10;  <superficie>641.4</superficie>&#10;  <codigoPostal>8320000</codigoPostal>&#10;</datos>"></textarea>
+                            <small class="form-text text-muted">
+                                <i class="bi bi-info-circle"></i> Formato XML opcional para información adicional
+                            </small>
+                        </div>
+                    </form>
+
+                    <div class="alert alert-info border-0">
+                        <i class="bi bi-lightbulb-fill"></i> <strong>Nota:</strong> Los cambios se guardarán mediante procedimiento almacenado con instrucción MERGE.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                    <button type="button" class="btn btn-warning" id="btnGuardarComuna">
+                        <i class="bi bi-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Styles
+{
+    <style>
+        .region-item {
+            transition: background-color 0.2s;
+        }
+
+            .region-item:hover {
+                background-color: #e9ecef;
+            }
+
+            .region-item.active {
+                background-color: #0d6efd;
+                color: white;
+            }
+
+                .region-item.active td {
+                    color: white;
+                }
+
+                .region-item.active .badge {
+                    background-color: white !important;
+                    color: #0d6efd !important;
+                }
+
+        .font-monospace {
+            font-family: 'Courier New', monospace;
+        }
+
+        .hover-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+            .hover-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 16px rgba(0,0,0,0.15) !important;
+            }
+    </style>
+}
+@section Scripts {
+    <script>
+        // Variable global para mantener el ID de región actual
+        let regionIdActual = null;
+         $(document).ready(function() {
+            cargarRegiones();
+        });
+                // ==================== CARGAR REGIONES ====================
+        function cargarRegiones() {
+            console.log('Cargando regiones:');
+
+            $('#listaRegiones').html(`
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Cargando Regiones...</p>
+                </div>
+            `);
+
+            fetch('@Url.Action("GetAllRegiones", "Region")')
+                .then(response => {
+                    if (!response.ok) throw new Error('Error en la respuesta');
+                    return response.json();
+                })
+                .then(regiones => {
+                 let html = '';
+
+                    regiones.forEach(function(region) {
+                   html += `<div class="row">
+                               <div class="col-sm-auto">
+                                        <a asp-action="Details" asp-route-id="${region.idRegion}" class="btn btn-outline-primary btn-sm" onclick="cargarDetallesRegion(${region.idRegion})" 
+                                        data-bs-toggle="modal" data-bs-target="#modalDetallesRegion">
+                                         <i class="bi bi-info-circle"></i> Detalles
+                                         </a>
+                               </div>
+                               <div class="col">
+                                   <a href="#" class="list-group-item list-group-item-action region-item" data-region-id="${region.idRegion}" data-region-nombre="${region.nombreRegion}">
+                                    <span>${region.nombreRegion}</span>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </div>
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    $('#listaRegiones').html(html);
+                        })
+                .catch(error => {
+                    console.error('Error:', error);
+                    $('#listaRegiones').html(`
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle"></i> Error al cargar las Regiones
+                        </div>
+                    `);
+                });
+        }
+
+        // ==================== CARGAR DETALLES DE REGIÓN ====================
+        function cargarDetallesRegion(regionId) {
+            console.log('Cargando región:', regionId);
+
+            $('#contenidoDetallesRegion').html(`
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Cargando información...</p>
+                </div>
+            `);
+            if (regionId == 0){
+                     let html = `
+                        <div class="row mb-3">
+                                <input type="hidden" id="idRegion" name="idRegion" value="${regionId}" />
+                            <div class="col-4"><strong><i class="bi bi-map"></i> Nombre:</strong></div>
+                            <div class="col-8">
+                                <input type="Text" name="NombreRegion" id="NombreRegion" value="" />
+                            </div>
+                        </div>
+                    `;
+                     $('#contenidoDetallesRegion').html(html);
+                     return;
+            }else{
+            fetch('@Url.Action("Details", "Region")/' + regionId)
+                .then(response => {
+
+                    if (!response.ok) throw new Error('Error en la respuesta'+response.error);
+                    return response.json();
+                })
+                .then(data => {
+                    let html = `
+                        <div class="row mb-3">
+                                <input type="hidden" id="idRegion" name="idRegion" value="${data.idRegion}" />
+                            <div class="col-4"><strong><i class="bi bi-map"></i> Nombre:</strong></div>
+                            <div class="col-8">
+                                <input type="Text" name="NombreRegion" id="NombreRegion" value="${data.nombreRegion}" required />
+                        </div>
+                    `;
+                    $('#contenidoDetallesRegion').html(html);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    $('#contenidoDetallesRegion').html(`
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle"></i> Error al cargar los detalles de la región
+                        </div>
+                    `);
+                });
+            }
+        }
+
+        // ==================== CARGAR COMUNAS ====================
+        function cargarComunas(regionId, regionNombre) {
+            console.log('Cargando comunas de región:', regionId, regionNombre);
+            regionIdActual = regionId;
+
+            $('#tituloComunas').text('Comunas de ' + regionNombre);
+            $('#contenidoComunas').html(`
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Cargando comunas...</p>
+                </div>
+            `);
+
+            fetch('@Url.Action("Comunas", "Region")/' + regionId)
+                .then(response => {
+                    if (!response.ok) throw new Error('Error en la respuesta');
+                    return response.json();
+                })
+                .then(comunas => {
+                    if (comunas.length === 0) {
+                        $('#contenidoComunas').html(`
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> No hay comunas registradas en esta región
+                                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditarComuna"
+                                onclick="abrirEdicionComuna(0)">
+                                    <i class="bi bi-info-circle"></i> Agregar Comuna
+                                </button>
+                            </div>
+                        `);
+                        return;
+                    }
+
+                    let html = '<div class="table-responsive"><table class="table table-hover align-middle">';
+                    html += '<thead class="table-light">';
+                    html += '<tr>';
+                    html += '<th style="width: 10%;"><i class="bi bi-hash"></i> ID</th>';
+                    html += '<th style="width: 60%;"><i class="bi bi-building"></i> Nombre</th>';
+                    html += '<th style="width: 30%;" class="text-end"><i class="bi bi-gear"></i> Acciones</th>';
+                    html += '</tr>';
+                    html += '</thead><tbody>';
+
+                    comunas.forEach(comuna => {
+                        html += `
+                            <tr>
+                                <td><span class="badge bg-secondary">${comuna.idComuna}</span></td>
+                                <td><strong>${comuna.nombreComuna}</strong></td>
+                                <td class="text-end table-actions">
+                                    <button class="btn btn-sm btn-warning"
+                                            onclick="abrirEdicionComuna(${comuna.idComuna})"
+                                            title="Editar comuna">
+                                        <i class="bi bi-pencil-fill"></i> Editar
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    html += '</tbody></table></div>';
+                    html += `<div class="mt-3"><small class="text-muted"><i class="bi bi-info-circle"></i> Total: <strong>${comunas.length}</strong> comunas</small></div>`;
+                    $('#contenidoComunas').html(html);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    $('#contenidoComunas').html(`
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle"></i> Error al cargar las comunas
+                        </div>
+                    `);
+                });
+        }
+
+        // ==================== ABRIR EDICIÓN DE COMUNA ====================
+        function abrirEdicionComuna(comunaId) {
+            console.log('Editando comuna:', comunaId);
+
+            // Mostrar el modal de edición
+            const modalEditar = new bootstrap.Modal(document.getElementById('modalEditarComuna'));
+            modalEditar.show();
+
+            // Cargar los datos
+            fetch('@Url.Action("GetComunaDetails", "Comunas")/' + comunaId)
+                .then(response => {
+                    if (!response.ok) throw new Error('Error en la respuesta');
+                    return response.json();
+                })
+                .then(comuna => {
+                    $('#editIdComuna').val(comuna.idComuna);
+                    $('#editIdRegion').val(comuna.idRegion);
+                    $('#displayIdComuna').val(comuna.idComuna);
+                    $('#displayIdRegion').val(comuna.idRegion);
+                    $('#editNombreComuna').val(comuna.nombreComuna);
+                    $('#editInformacion').val(comuna.informacion || '');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    mostrarAlerta('Error al cargar los datos de la comuna', 'danger');
+                    modalEditar.hide();
+                });
+        }
+
+        // ==================== GUARDAR COMUNA ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('btnGuardarComuna').addEventListener('click', function() {
+                const nombreComuna = document.getElementById('editNombreComuna').value.trim();
+
+                if (!nombreComuna) {
+                    document.getElementById('editNombreComuna').classList.add('is-invalid');
+                    return;
+                }
+
+                document.getElementById('editNombreComuna').classList.remove('is-invalid');
+
+                const comunaData = {
+                    idComuna: parseInt(document.getElementById('editIdComuna').value),
+                    idRegion: parseInt(document.getElementById('editIdRegion').value),
+                    nombreComuna: nombreComuna,
+                    informacion: document.getElementById('editInformacion').value || null
+                };
+
+                console.log('Guardando comuna:', comunaData);
+
+                // Deshabilitar botón mientras se guarda
+                const btnGuardar = this;
+                const textoOriginal = btnGuardar.innerHTML;
+                btnGuardar.disabled = true;
+                btnGuardar.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
+
+                fetch('@Url.Action("UpdateComuna", "Comunas")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(comunaData)
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Error al guardar');
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Respuesta:', data);
+
+                    // Cerrar modal
+                    const modalEditar = bootstrap.Modal.getInstance(document.getElementById('modalEditarComuna'));
+                    modalEditar.hide();
+
+                    // Mostrar mensaje de éxito
+                    mostrarAlerta('Comuna actualizada correctamente', 'success');
+
+                    // Recargar comunas
+                    if (regionIdActual) {
+                        const regionNombre = document.getElementById('tituloComunas').textContent.replace('Comunas de ', '');
+                        cargarComunas(regionIdActual, regionNombre);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    mostrarAlerta('Error al actualizar la comuna', 'danger');
+                })
+                .finally(() => {
+                    btnGuardar.disabled = false;
+                    btnGuardar.innerHTML = textoOriginal;
+                });
+            });
+        });
+
+        // ==================== GUARDAR Region ====================
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('btnGuardarRegion').addEventListener('click', function() {
+                const nombreRegion = document.getElementById('NombreRegion').value.trim();
+                 console.log('Nombre region: ', nombreRegion);
+                if (!nombreRegion) {
+                   // document.getElementById('NombreRegion').classList.add('is-invalid');
+                    return;
+                }
+                console.log('Nombre region: ', nombreRegion);
+                document.getElementById('NombreRegion').classList.remove('is-invalid');
+
+                const regionData = {
+                    idRegion: parseInt(document.getElementById('idRegion').value),
+                    nombreRegion: nombreRegion
+                };
+
+                console.log('Guardando region:', regionData);
+
+                // Deshabilitar botón mientras se guarda
+                const btnGuardar = this;
+                const textoOriginal = "Guardar";
+                btnGuardar.disabled = true;
+                btnGuardar.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
+
+                fetch('@Url.Action("UpdSert", "Region")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(regionData)
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Error en la respuesta '+response.error);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Respuesta:', data);
+
+                    // Cerrar modal
+                    const modalEditarRegion = bootstrap.Modal.getInstance(document.getElementById('modalDetallesRegion'));
+                    modalEditarRegion.hide();
+
+                    // Mostrar mensaje de éxito
+                    mostrarAlerta('Region actualizada correctamente', 'success');
+                    
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    mostrarAlerta('Error al actualizar la Región', 'danger');
+                })
+                .finally(() => {
+                    btnGuardar.disabled = false;
+                    btnGuardar.innerHTML = textoOriginal;
+                });
+            });
+        });
+         // ==================== Eventos ====================
+           $(document).on('click', '.region-item', function(e) {
+            e.preventDefault();
+
+            console.log('=== Click en región ===');
+
+            // Remover clase active de todas las filas
+            $('.region-item').removeClass('active');
+
+            // Agregar clase active a la fila seleccionada
+            $(this).addClass('active');
+
+            // Obtener datos de la región
+            const regionId = $(this).data('region-id');
+            const regionNombre = $(this).data('region-nombre');
+
+            console.log('Region ID:', regionId);
+            console.log('Region Nombre:', regionNombre);
+
+            // Guardar ID actual
+            regionIdActual = regionId;
+
+            // Actualizar título
+            $('#tituloComuna').text('Comunas de ' + regionNombre);
+
+            // Cargar comunas
+            cargarComunas(regionId,regionNombre);
+        });
+
+        // ==================== MOSTRAR ALERTAS ====================
+        function mostrarAlerta(mensaje, tipo) {
+            const alertHTML = `
+                <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+                    <i class="bi bi-${tipo === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill'}"></i>
+                    ${mensaje}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+
+            document.getElementById('alertContainer').innerHTML = alertHTML;
+
+            // Auto-cerrar después de 4 segundos
+            setTimeout(() => {
+                const alert = document.querySelector('#alertContainer .alert');
+                if (alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }
+            }, 4000);
+
+            // Scroll al top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+}
